@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Image Token Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .size-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .size-inputs .form-group {
+            flex: 1;
+        }
+        
+        .detail-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .detail-options label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+        
+        .detail-options input[type="radio"] {
+            margin-right: 5px;
+            width: auto;
+        }
+        
+        .calculate-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .calculate-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-left: 4px solid #28a745;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result h3 {
+            margin-top: 0;
+            color: #155724;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result h3::before {
+            content: "🎯";
+            font-size: 20px;
+        }
+        
+        #token-cost {
+            font-weight: bold;
+            color: #dc3545;
+            font-size: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .calculation-steps {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .step-item {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: slideInLeft 0.5s ease forwards;
+        }
+        
+        .step-item:nth-child(1) { animation-delay: 0.1s; }
+        .step-item:nth-child(2) { animation-delay: 0.2s; }
+        .step-item:nth-child(3) { animation-delay: 0.3s; }
+        .step-item:nth-child(4) { animation-delay: 0.4s; }
+        .step-item:nth-child(5) { animation-delay: 0.5s; }
+        .step-item:nth-child(6) { animation-delay: 0.6s; }
+        .step-item:nth-child(7) { animation-delay: 0.7s; }
+        .step-item:nth-child(8) { animation-delay: 0.8s; }
+        .step-item:nth-child(9) { animation-delay: 0.9s; }
+        .step-item:nth-child(10) { animation-delay: 1.0s; }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .step-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        
+        .step-main {
+            border-left-color: #007bff;
+            background: linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%);
+        }
+        
+        .step-calculation {
+            border-left-color: #28a745;
+            background: linear-gradient(90deg, #e8f5e8 0%, #ffffff 100%);
+        }
+        
+        .step-scaling {
+            border-left-color: #ffc107;
+            background: linear-gradient(90deg, #fff8e1 0%, #ffffff 100%);
+        }
+        
+        .step-final {
+            border-left-color: #dc3545;
+            background: linear-gradient(90deg, #ffebee 0%, #ffffff 100%);
+            font-weight: bold;
+        }
+        
+        .step-patch {
+            border-left-color: #9c27b0;
+            background: linear-gradient(90deg, #f3e5f5 0%, #ffffff 100%);
+        }
+        
+        .step-multiplier {
+            border-left-color: #ff5722;
+            background: linear-gradient(90deg, #fbe9e7 0%, #ffffff 100%);
+            font-weight: bold;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .step-patch .step-number {
+            background: #9c27b0;
+        }
+        
+        .step-scaling .step-number {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .step-final .step-number,
+        .step-multiplier .step-number {
+            background: #dc3545;
+        }
+        
+        .step-calculation .step-number {
+            background: #28a745;
+        }
+        
+        .model-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .model-info h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .model-info table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .model-info th, .model-info td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .model-info th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        
+        .algorithm-note {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .algorithm-type {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .tile-based {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #1565c0;
+            position: relative;
+        }
+        
+        .tile-based::before {
+            content: "🔲";
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .patch-based {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            color: #7b1fa2;
+            position: relative;
+        }
+        
+        .patch-based::before {
+            content: "⬜";
+            margin-right: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LLM Image Token Calculator</h1>
+        
+        <div class="form-group">
+            <label for="model">Select Model:</label>
+            <select id="model">
+                <optgroup label="Tile-based Algorithm (512px tiles)">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4.1">GPT-4.1</option>
+                    <option value="gpt-4o-mini">GPT-4o-mini</option>
+                    <option value="computer-use-preview">Computer Use Preview</option>
+                    <option value="o1">o1</option>
+                    <option value="o1-pro">o1-pro</option>
+                    <option value="o3">o3</option>
+                </optgroup>
+                <optgroup label="Patch-based Algorithm (32px patches)">
+                    <option value="gpt-4.1-mini">GPT-4.1-mini</option>
+                    <option value="gpt-4.1-nano">GPT-4.1-nano</option>
+                    <option value="o4-mini">o4-mini</option>
+                </optgroup>
+            </select>
+        </div>
+        
+        <div class="size-inputs">
+            <div class="form-group">
+                <label for="width">Width (px):</label>
+                <input type="number" id="width" value="1024" min="1">
+            </div>
+            <div class="form-group">
+                <label for="height">Height (px):</label>
+                <input type="number" id="height" value="1024" min="1">
+            </div>
+        </div>
+        
+        <div class="form-group" id="detail-section">
+            <label>Detail Level:</label>
+            <div class="detail-options">
+                <label>
+                    <input type="radio" name="detail" value="low"> Low
+                </label>
+                <label>
+                    <input type="radio" name="detail" value="high" checked> High
+                </label>
+            </div>
+            <div class="algorithm-note">
+                <small><strong>Note:</strong> Detail level only applies to tile-based models (512px tiles)</small>
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateTokens()">Calculate Tokens</button>
+        
+        <div class="result" id="result">
+            <div class="algorithm-type" id="algorithm-type"></div>
+            <h3>Token Cost: <span id="token-cost">0</span> tokens</h3>
+            <div class="calculation-steps" id="calculation-steps"></div>
+        </div>
+        
+        <div class="model-info">
+            <h4>Model Token Costs Reference</h4>
+            
+            <h5>Tile-based Models (512px tiles)</h5>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Base Tokens (Low Detail)</th>
+                        <th>Tile Tokens (High Detail)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPT-4o, GPT-4.1</td>
+                        <td>85</td>
+                        <td>170</td>
+                    </tr>
+                    <tr>
+                        <td>GPT-4o-mini</td>
+                        <td>2833</td>
+                        <td>5667</td>
+                    </tr>
+                    <tr>
+                        <td>o1, o1-pro, o3</td>
+                        <td>75</td>
+                        <td>150</td>
+                    </tr>
+                    <tr>
+                        <td>Computer Use Preview</td>
+                        <td>65</td>
+                        <td>129</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h5>Patch-based Models (32px patches)</h5>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Base Tokens (per patch)</th>
+                        <th>Multiplier</th>
+                        <th>Max Patches</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPT-4.1-mini</td>
+                        <td>1</td>
+                        <td>1.62</td>
+                        <td>1536</td>
+                    </tr>
+                    <tr>
+                        <td>GPT-4.1-nano</td>
+                        <td>1</td>
+                        <td>2.46</td>
+                        <td>1536</td>
+                    </tr>
+                    <tr>
+                        <td>o4-mini</td>
+                        <td>1</td>
+                        <td>1.72</td>
+                        <td>1536</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Model token costs
+        const modelCosts = {
+            // Tile-based models (512px tiles)
+            'gpt-4o': { type: 'tile', base: 85, tile: 170 },
+            'gpt-4.1': { type: 'tile', base: 85, tile: 170 },
+            'gpt-4o-mini': { type: 'tile', base: 2833, tile: 5667 },
+            'computer-use-preview': { type: 'tile', base: 65, tile: 129 },
+            'o1': { type: 'tile', base: 75, tile: 150 },
+            'o1-pro': { type: 'tile', base: 75, tile: 150 },
+            'o3': { type: 'tile', base: 75, tile: 150 },
+            // Patch-based models (32px patches)
+            'gpt-4.1-mini': { type: 'patch', multiplier: 1.62, maxPatches: 1536 },
+            'gpt-4.1-nano': { type: 'patch', multiplier: 2.46, maxPatches: 1536 },
+            'o4-mini': { type: 'patch', multiplier: 1.72, maxPatches: 1536 }
+        };
+
+        function calculatePatchTokens(width, height, costs) {
+            let steps = [];
+            let stepNum = 1;
+            
+            // Step 1: Calculate initial patches
+            const patchesX = Math.ceil(width / 32);
+            const patchesY = Math.ceil(height / 32);
+            const totalPatches = patchesX * patchesY;
+            
+            steps.push({
+                text: `Calculate 32px patches needed`,
+                type: 'step-main',
+                number: stepNum++
+            });
+            steps.push({
+                text: `Width: ${width}px → ${patchesX} patches (${width} + 32 - 1) // 32`,
+                type: 'step-calculation',
+                number: null
+            });
+            steps.push({
+                text: `Height: ${height}px → ${patchesY} patches (${height} + 32 - 1) // 32`,
+                type: 'step-calculation',
+                number: null
+            });
+            steps.push({
+                text: `Total patches: ${patchesX} × ${patchesY} = ${totalPatches}`,
+                type: 'step-patch',
+                number: null
+            });
+            
+            let finalTokens = totalPatches;
+            let scaledWidth = width;
+            let scaledHeight = height;
+            
+            // Step 2: Check if scaling is needed
+            if (totalPatches > costs.maxPatches) {
+                steps.push({
+                    text: `Patches exceed ${costs.maxPatches} limit, scaling down needed`,
+                    type: 'step-scaling',
+                    number: stepNum++
+                });
+                
+                // Calculate shrink factor
+                const shrinkFactor = Math.sqrt((costs.maxPatches * 32 * 32) / (width * height));
+                scaledWidth = Math.round(width * shrinkFactor);
+                scaledHeight = Math.round(height * shrinkFactor);
+                
+                steps.push({
+                    text: `Shrink factor: sqrt(${costs.maxPatches} × 32² / (${width} × ${height})) = ${shrinkFactor.toFixed(3)}`,
+                    type: 'step-calculation',
+                    number: null
+                });
+                steps.push({
+                    text: `Scaled dimensions: ${scaledWidth}px × ${scaledHeight}px`,
+                    type: 'step-scaling',
+                    number: null
+                });
+                
+                // Recalculate patches with scaled dimensions
+                const newPatchesX = Math.ceil(scaledWidth / 32);
+                const newPatchesY = Math.ceil(scaledHeight / 32);
+                const newTotalPatches = newPatchesX * newPatchesY;
+                
+                steps.push({
+                    text: `New patches: ${newPatchesX} × ${newPatchesY} = ${newTotalPatches}`,
+                    type: 'step-patch',
+                    number: null
+                });
+                
+                // Additional scaling to fit exactly if needed
+                if (newTotalPatches > costs.maxPatches) {
+                    const additionalScale = Math.sqrt(costs.maxPatches / newTotalPatches);
+                    scaledWidth = Math.round(scaledWidth * additionalScale);
+                    scaledHeight = Math.round(scaledHeight * additionalScale);
+                    
+                    const finalPatchesX = Math.ceil(scaledWidth / 32);
+                    const finalPatchesY = Math.ceil(scaledHeight / 32);
+                    finalTokens = finalPatchesX * finalPatchesY;
+                    
+                    steps.push({
+                        text: `Additional scaling: ${additionalScale.toFixed(3)}`,
+                        type: 'step-scaling',
+                        number: null
+                    });
+                    steps.push({
+                        text: `Final dimensions: ${scaledWidth}px × ${scaledHeight}px`,
+                        type: 'step-scaling',
+                        number: null
+                    });
+                    steps.push({
+                        text: `Final patches: ${finalPatchesX} × ${finalPatchesY} = ${finalTokens}`,
+                        type: 'step-patch',
+                        number: null
+                    });
+                } else {
+                    finalTokens = newTotalPatches;
+                }
+            } else {
+                steps.push({
+                    text: `Patches within ${costs.maxPatches} limit, no scaling needed`,
+                    type: 'step-main',
+                    number: stepNum++
+                });
+            }
+            
+            // Step 3: Apply model multiplier
+            const totalTokens = Math.round(finalTokens * costs.multiplier);
+            steps.push({
+                text: `Apply model multiplier: ${finalTokens} × ${costs.multiplier} = ${totalTokens} tokens`,
+                type: 'step-multiplier',
+                number: stepNum++
+            });
+            
+            return { tokens: totalTokens, steps: steps };
+        }
+
+        function calculateTileTokens(width, height, detail, costs) {
+            let tokens = 0;
+            let steps = [];
+            let stepNum = 1;
+            
+            if (detail === 'low') {
+                tokens = costs.base;
+                steps.push({
+                    text: `Low detail mode: Fixed cost of ${costs.base} tokens`,
+                    type: 'step-final',
+                    number: 1
+                });
+            } else {
+                // High detail calculation
+                let scaledWidth = width;
+                let scaledHeight = height;
+                
+                // Step 1: Scale to fit in 2048x2048 square
+                const maxDimension = Math.max(scaledWidth, scaledHeight);
+                if (maxDimension > 2048) {
+                    const scaleFactor = 2048 / maxDimension;
+                    scaledWidth = Math.round(scaledWidth * scaleFactor);
+                    scaledHeight = Math.round(scaledHeight * scaleFactor);
+                    steps.push({
+                        text: `Scale to fit 2048x2048 square`,
+                        type: 'step-scaling',
+                        number: stepNum++
+                    });
+                    steps.push({
+                        text: `Scaled to: ${scaledWidth}px × ${scaledHeight}px`,
+                        type: 'step-scaling',
+                        number: null
+                    });
+                } else {
+                    steps.push({
+                        text: `Image already fits in 2048x2048 square`,
+                        type: 'step-main',
+                        number: stepNum++
+                    });
+                    steps.push({
+                        text: `Size: ${scaledWidth}px × ${scaledHeight}px`,
+                        type: 'step-main',
+                        number: null
+                    });
+                }
+                
+                // Step 2: Scale so shortest side is 768px
+                const shortestSide = Math.min(scaledWidth, scaledHeight);
+                if (shortestSide > 768) {
+                    const scaleFactor = 768 / shortestSide;
+                    scaledWidth = Math.round(scaledWidth * scaleFactor);
+                    scaledHeight = Math.round(scaledHeight * scaleFactor);
+                    steps.push({
+                        text: `Scale shortest side to 768px`,
+                        type: 'step-scaling',
+                        number: stepNum++
+                    });
+                    steps.push({
+                        text: `Final size: ${scaledWidth}px × ${scaledHeight}px`,
+                        type: 'step-scaling',
+                        number: null
+                    });
+                } else {
+                    steps.push({
+                        text: `Shortest side already ≤ 768px`,
+                        type: 'step-main',
+                        number: stepNum++
+                    });
+                    steps.push({
+                        text: `No further scaling: ${scaledWidth}px × ${scaledHeight}px`,
+                        type: 'step-main',
+                        number: null
+                    });
+                }
+                
+                // Step 3: Calculate number of 512px tiles
+                const tilesX = Math.ceil(scaledWidth / 512);
+                const tilesY = Math.ceil(scaledHeight / 512);
+                const totalTiles = tilesX * tilesY;
+                
+                steps.push({
+                    text: `Calculate 512px tiles needed`,
+                    type: 'step-main',
+                    number: stepNum++
+                });
+                steps.push({
+                    text: `Tiles: ${tilesX} × ${tilesY} = ${totalTiles} tiles`,
+                    type: 'step-calculation',
+                    number: null
+                });
+                
+                // Step 4: Calculate final cost
+                const tileTokens = totalTiles * costs.tile;
+                tokens = tileTokens + costs.base;
+                
+                steps.push({
+                    text: `Final calculation: ${totalTiles} × ${costs.tile} + ${costs.base} = ${tokens} tokens`,
+                    type: 'step-final',
+                    number: stepNum++
+                });
+            }
+            
+            return { tokens: tokens, steps: steps };
+        }
+
+        function calculateTokens() {
+            const model = document.getElementById('model').value;
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+            const detail = document.querySelector('input[name="detail"]:checked')?.value || 'high';
+            
+            if (!width || !height || width <= 0 || height <= 0) {
+                alert('Please enter valid width and height values');
+                return;
+            }
+            
+            const costs = modelCosts[model];
+            let result;
+            
+            // Show/hide detail section and set algorithm type display
+            const detailSection = document.getElementById('detail-section');
+            const algorithmType = document.getElementById('algorithm-type');
+            
+            if (costs.type === 'tile') {
+                detailSection.classList.remove('hidden');
+                algorithmType.textContent = 'Tile-based Algorithm (512px tiles)';
+                algorithmType.className = 'algorithm-type tile-based';
+                result = calculateTileTokens(width, height, detail, costs);
+            } else {
+                detailSection.classList.add('hidden');
+                algorithmType.textContent = 'Patch-based Algorithm (32px patches)';
+                algorithmType.className = 'algorithm-type patch-based';
+                result = calculatePatchTokens(width, height, costs);
+            }
+            
+            // Display results with animation
+            const tokenCostElement = document.getElementById('token-cost');
+            tokenCostElement.style.animation = 'none';
+            tokenCostElement.offsetHeight; // Trigger reflow
+            tokenCostElement.style.animation = 'pulse 0.5s ease-in-out';
+            tokenCostElement.textContent = result.tokens;
+            
+            // Format steps with proper styling
+            const stepsHtml = result.steps.map(step => {
+                const numberHtml = step.number ? `<span class="step-number">${step.number}</span>` : '';
+                return `<div class="step-item ${step.type}">${numberHtml}${step.text}</div>`;
+            }).join('');
+            
+            document.getElementById('calculation-steps').innerHTML = stepsHtml;
+            document.getElementById('result').classList.add('show');
+        }
+        
+        // Auto-calculate on input change
+        document.getElementById('model').addEventListener('change', calculateTokens);
+        document.getElementById('width').addEventListener('input', calculateTokens);
+        document.getElementById('height').addEventListener('input', calculateTokens);
+        document.querySelectorAll('input[name="detail"]').forEach(radio => {
+            radio.addEventListener('change', calculateTokens);
+        });
+        
+        // Initial calculation
+        calculateTokens();
+    </script>
+</body>
+</html>
