@@ -7,43 +7,91 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .main-container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            min-height: calc(100vh - 40px);
         }
         
         .container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
         }
         
         h1 {
-            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         select, input[type="number"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 16px;
             box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        select:hover, input[type="number"]:hover {
+            border-color: #cbd5e0;
         }
         
         .size-inputs {
@@ -73,69 +121,113 @@
         }
         
         .calculate-btn {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 24px;
+            padding: 16px 32px;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .calculate-btn:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
         
         .result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e9f7ef;
-            border-left: 4px solid #28a745;
-            border-radius: 5px;
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+            border: none;
+            border-radius: 20px;
             display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(72, 187, 120, 0.2);
         }
         
         .result.show {
             display: block;
+            animation: resultSlideIn 0.5s ease;
+        }
+        
+        @keyframes resultSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .result h3 {
             margin-top: 0;
-            color: #155724;
-            font-size: 18px;
+            color: #2d3748;
+            font-size: 22px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
         
         .result h3::before {
             content: "🎯";
-            font-size: 20px;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
         }
         
         #token-cost {
-            font-weight: bold;
-            color: #dc3545;
-            font-size: 20px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            font-weight: 800;
+            background: linear-gradient(135deg, #e53e3e 0%, #dd6b20 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
             animation: pulse 0.5s ease-in-out;
         }
         
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
         
         .calculation-steps {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
             font-size: 14px;
-            color: #666;
+            color: #4a5568;
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         
         .step-item {
@@ -243,33 +335,190 @@
         }
         
         .model-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 0;
         }
         
         .model-info h4 {
             margin-top: 0;
-            color: #333;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .model-section {
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .model-section h5 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .model-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
         
         .model-info table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-        }
-        
-        .model-info th, .model-info td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            background: white;
         }
         
         .model-info th {
-            background-color: #e9ecef;
-            font-weight: bold;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .model-info th:first-child {
+            text-align: left;
+            border-top-left-radius: 10px;
+        }
+        
+        .model-info th:last-child {
+            border-top-right-radius: 10px;
+        }
+        
+        .model-info td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+            color: #4a5568;
+            font-size: 13px;
+        }
+        
+        .model-info td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .model-info tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .model-info tr:last-child td:first-child {
+            border-bottom-left-radius: 10px;
+        }
+        
+        .model-info tr:last-child td:last-child {
+            border-bottom-right-radius: 10px;
+        }
+        
+        .model-info small {
+            color: #718096;
+            font-size: 10px;
+        }
+        
+        /* 作者信息和参考链接样式 */
+        .author-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 15px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .author-section, .reference-section {
+            margin-bottom: 20px;
+        }
+        
+        .reference-section {
+            margin-bottom: 0;
+        }
+        
+        .author-info h6 {
+            margin: 0 0 10px 0;
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .author-email {
+            margin: 0;
+            color: #4a5568;
+            font-size: 13px;
+            font-family: monospace;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            text-align: center;
+        }
+        
+        .reference-text {
+            margin: 0 0 8px 0;
+            color: #4a5568;
+            font-size: 12px;
+        }
+        
+        .reference-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .reference-link:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            text-decoration: none;
+            color: #5a67d8;
+        }
+        
+        .reference-link svg {
+            transition: transform 0.3s ease;
+        }
+        
+        .reference-link:hover svg {
+            transform: translate(2px, -2px);
         }
         
         .algorithm-note {
@@ -287,43 +536,569 @@
         }
         
         .algorithm-type {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 12px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid transparent;
         }
         
         .tile-based {
-            background-color: #e3f2fd;
-            border-left: 4px solid #2196f3;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             color: #1565c0;
+            border-color: rgba(33, 150, 243, 0.3);
             position: relative;
         }
         
         .tile-based::before {
             content: "🔲";
-            margin-right: 8px;
-            font-size: 16px;
+            margin-right: 10px;
+            font-size: 18px;
+            animation: float 3s ease-in-out infinite;
         }
         
         .patch-based {
-            background-color: #f3e5f5;
-            border-left: 4px solid #9c27b0;
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
             color: #7b1fa2;
+            border-color: rgba(156, 39, 176, 0.3);
             position: relative;
         }
         
         .patch-based::before {
             content: "⬜";
-            margin-right: 8px;
+            margin-right: 10px;
+            font-size: 18px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* 新增的UI样式 */
+        .input-method-tabs {
+            display: flex;
+            gap: 6px;
+            margin-top: 15px;
+            border-radius: 15px;
+            background: rgba(226, 232, 240, 0.6);
+            padding: 6px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background-color: transparent;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.8);
+            color: #2d3748;
+            transform: translateY(-1px);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .input-method {
+            margin-top: 15px;
+        }
+        
+        .input-method.hidden {
+            display: none;
+        }
+        
+        input[type="file"]:not(.upload-area input) {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        /* 拖拽上传区域增强 */
+        .upload-area {
+            position: relative;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #cbd5e0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+        
+        .upload-area::after {
+            content: "📁 Drag & Drop or Click to Select";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            color: #4a5568;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.8;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .upload-area input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .url-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        
+        .url-input-container input[type="url"] {
+            flex: 1;
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .load-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+        
+        .load-btn:hover:not(:disabled) {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .load-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .url-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .url-status.loading {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .url-status.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .url-status.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            white-space: pre-line;
+        }
+        
+        .url-status:empty {
+            display: none;
+        }
+        
+        /* 手动输入按钮样式 */
+        .manual-input-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .manual-input-btn:hover {
+            background-color: #138496;
+            transform: translateY(-1px);
+        }
+        
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        .manual-size-inputs {
+            margin: 20px 0;
+        }
+        
+        .manual-size-inputs .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .manual-size-inputs label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .manual-size-inputs input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .apply-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .apply-btn:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .cancel-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #545b62;
+            transform: translateY(-1px);
+        }
+        
+        .cors-tip {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+        
+        .upload-hint {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #718096;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .image-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .preview-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        #preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            object-fit: contain;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 60px;
+        }
+        
+        .info-item span:last-child {
+            color: #333;
+            font-family: monospace;
+            background-color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .sidebar {
+                position: relative;
+                top: auto;
+                order: -1;
+            }
+            
+            .container {
+                padding: 30px;
+            }
+            
+            .sidebar {
+                padding: 25px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .container, .sidebar {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+            
+            .preview-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            #preview-image {
+                max-width: 150px;
+                max-height: 150px;
+            }
+            
+            .tab-btn {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            
+            .url-input-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .load-btn {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            .model-section {
+                padding: 15px;
+            }
+            
+            .model-info table {
+                font-size: 12px;
+            }
+            
+            .model-info th {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+            
+            .model-info td {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            }
+            
+            .main-container {
+                padding: 10px;
+            }
+            
+            .container, .sidebar {
+                padding: 15px;
+                border-radius: 12px;
+                margin-bottom: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+            
+            .size-inputs {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .calculate-btn {
+                padding: 14px 24px;
+                font-size: 16px;
+                margin-top: 20px;
+            }
+            
+            #token-cost {
+                font-size: 24px;
+            }
+            
+            .result h3 {
+                font-size: 18px;
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>LLM Image Token Calculator</h1>
+    <div class="main-container">
+        <div class="container">
+            <h1>🎯 LLM Image Token Calculator</h1>
         
         <div class="form-group">
             <label for="model">Select Model:</label>
@@ -356,6 +1131,64 @@
             </div>
         </div>
         
+        <div class="form-group">
+            <label>Get Image Dimensions:</label>
+            <div class="input-method-tabs">
+                <button type="button" class="tab-btn active" onclick="switchInputMethod('manual')">Manual Input</button>
+                <button type="button" class="tab-btn" onclick="switchInputMethod('upload')">Upload Image</button>
+                <button type="button" class="tab-btn" onclick="switchInputMethod('url')">Image URL</button>
+            </div>
+        </div>
+        
+        <div class="input-method" id="manual-input">
+            <!-- Manual input is handled by the existing size-inputs above -->
+        </div>
+        
+        <div class="input-method hidden" id="upload-input">
+            <div class="form-group">
+                <label for="image-upload">Select Image File:</label>
+                <div class="upload-area">
+                    <input type="file" id="image-upload" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+                <div class="upload-hint">Supports JPG, PNG, GIF, WebP formats</div>
+            </div>
+        </div>
+        
+        <div class="input-method hidden" id="url-input">
+            <div class="form-group">
+                <label for="image-url">Image URL:</label>
+                <div class="url-input-container">
+                    <input type="url" id="image-url" placeholder="https://example.com/image.jpg" oninput="handleImageUrl(event)" onkeypress="if(event.key==='Enter') loadImageFromUrl()">
+                    <button type="button" id="load-url-btn" class="load-btn" onclick="loadImageFromUrl()" disabled>Load Image</button>
+                </div>
+                <div class="upload-hint">Enter complete image URL, then click "Load Image"</div>
+                <div id="url-status" class="url-status"></div>
+            </div>
+        </div>
+        
+        <div class="image-preview hidden" id="image-preview">
+            <div class="form-group">
+                <label>Image Preview:</label>
+                <div class="preview-container">
+                    <img id="preview-image" alt="Image Preview">
+                    <div class="preview-info">
+                        <div class="info-item">
+                            <span class="info-label">Filename:</span>
+                            <span id="preview-filename">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dimensions:</span>
+                            <span id="preview-dimensions">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">File Size:</span>
+                            <span id="preview-filesize">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="form-group" id="detail-section">
             <label>Detail Level:</label>
             <div class="detail-options">
@@ -378,74 +1211,105 @@
             <h3>Token Cost: <span id="token-cost">0</span> tokens</h3>
             <div class="calculation-steps" id="calculation-steps"></div>
         </div>
+        </div>
         
-        <div class="model-info">
-            <h4>Model Token Costs Reference</h4>
+        <div class="sidebar">
+            <div class="model-info">
+                <h4>📊 Model Token Costs Reference</h4>
+                
+                <div class="model-section">
+                    <h5>🔲 Tile-based Models <span class="model-badge">512px tiles</span></h5>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Base Tokens<br><small>(Low Detail)</small></th>
+                                    <th>Tile Tokens<br><small>(High Detail)</small></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>GPT-4o, GPT-4.1</strong></td>
+                                    <td>85</td>
+                                    <td>170</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GPT-4o-mini</strong></td>
+                                    <td>2833</td>
+                                    <td>5667</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>o1, o1-pro, o3</strong></td>
+                                    <td>75</td>
+                                    <td>150</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Computer Use Preview</strong></td>
+                                    <td>65</td>
+                                    <td>129</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="model-section">
+                    <h5>⬜ Patch-based Models <span class="model-badge">32px patches</span></h5>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Base Tokens<br><small>(per patch)</small></th>
+                                    <th>Multiplier</th>
+                                    <th>Max Patches</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>GPT-4.1-mini</strong></td>
+                                    <td>1</td>
+                                    <td>1.62</td>
+                                    <td>1536</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GPT-4.1-nano</strong></td>
+                                    <td>1</td>
+                                    <td>2.46</td>
+                                    <td>1536</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>o4-mini</strong></td>
+                                    <td>1</td>
+                                    <td>1.72</td>
+                                    <td>1536</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
-            <h5>Tile-based Models (512px tiles)</h5>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Model</th>
-                        <th>Base Tokens (Low Detail)</th>
-                        <th>Tile Tokens (High Detail)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>GPT-4o, GPT-4.1</td>
-                        <td>85</td>
-                        <td>170</td>
-                    </tr>
-                    <tr>
-                        <td>GPT-4o-mini</td>
-                        <td>2833</td>
-                        <td>5667</td>
-                    </tr>
-                    <tr>
-                        <td>o1, o1-pro, o3</td>
-                        <td>75</td>
-                        <td>150</td>
-                    </tr>
-                    <tr>
-                        <td>Computer Use Preview</td>
-                        <td>65</td>
-                        <td>129</td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <h5>Patch-based Models (32px patches)</h5>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Model</th>
-                        <th>Base Tokens (per patch)</th>
-                        <th>Multiplier</th>
-                        <th>Max Patches</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>GPT-4.1-mini</td>
-                        <td>1</td>
-                        <td>1.62</td>
-                        <td>1536</td>
-                    </tr>
-                    <tr>
-                        <td>GPT-4.1-nano</td>
-                        <td>1</td>
-                        <td>2.46</td>
-                        <td>1536</td>
-                    </tr>
-                    <tr>
-                        <td>o4-mini</td>
-                        <td>1</td>
-                        <td>1.72</td>
-                        <td>1536</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="author-info">
+                <div class="author-section">
+                    <h6>👨‍💻 Author</h6>
+                    <p class="author-email">Joey.Zeng@microsoft.com</p>
+                </div>
+                
+                <div class="reference-section">
+                    <h6>📚 Reference</h6>
+                    <p class="reference-text">For more info, refer to:</p>
+                    <a href="https://platform.openai.com/docs/guides/images-vision?api-mode=chat#calculating-costs" target="_blank" class="reference-link">
+                        OpenAI Vision API Documentation
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15,3 21,3 21,9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -744,6 +1608,432 @@
         
         // Initial calculation
         calculateTokens();
+        
+        // 初始化URL加载按钮状态
+        const loadBtn = document.getElementById('load-url-btn');
+        if (loadBtn) {
+            loadBtn.disabled = true;
+        }
+        
+        // 新增的功能函数
+        let currentInputMethod = 'manual';
+        
+        function switchInputMethod(method) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 隐藏所有输入方法
+            document.querySelectorAll('.input-method').forEach(el => el.classList.add('hidden'));
+            
+            // 显示选中的输入方法
+            currentInputMethod = method;
+            if (method !== 'manual') {
+                document.getElementById(method + '-input').classList.remove('hidden');
+            }
+            
+            // 隐藏图片预览（除非是当前显示的方法）
+            if (method === 'manual') {
+                document.getElementById('image-preview').classList.add('hidden');
+            }
+        }
+        
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 检查文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // 更新尺寸输入框
+                    updateImageDimensions(this.width, this.height);
+                    
+                    // 显示图片预览
+                    showImagePreview({
+                        src: e.target.result,
+                        filename: file.name,
+                        width: this.width,
+                        height: this.height,
+                        filesize: file.size
+                    });
+                    
+                    // 重新计算token
+                    calculateTokens();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function handleImageUrl(event) {
+            const url = event.target.value.trim();
+            const loadBtn = document.getElementById('load-url-btn');
+            
+            if (!url) {
+                document.getElementById('image-preview').classList.add('hidden');
+                loadBtn.disabled = true;
+                loadBtn.textContent = '加载图片';
+                return;
+            }
+            
+            // 简单的URL格式验证
+            const urlPattern = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i;
+            if (!urlPattern.test(url)) {
+                showUrlError('Please enter a valid image URL (jpg, png, gif, webp formats)');
+                return;
+            }
+            
+            loadBtn.disabled = false;
+            loadBtn.textContent = 'Load Image';
+        }
+        
+        function loadImageFromUrl() {
+            const url = document.getElementById('image-url').value.trim();
+            const loadBtn = document.getElementById('load-url-btn');
+            const statusDiv = document.getElementById('url-status');
+            
+            if (!url) return;
+            
+            // 显示加载状态
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+            statusDiv.textContent = 'Loading image...';
+            statusDiv.className = 'url-status loading';
+            
+            // 显示加载提示
+            showImagePreview({
+                src: '',
+                filename: 'Loading...',
+                width: 0,
+                height: 0,
+                filesize: null
+            });
+            
+            // 创建图片元素来获取尺寸
+            const img = new Image();
+            
+            // 尝试不同的加载策略
+            loadImageWithFallback(img, url);
+        }
+        
+        function showUrlError(message) {
+            const statusDiv = document.getElementById('url-status');
+            statusDiv.textContent = `❌ ${message}`;
+            statusDiv.className = 'url-status error';
+            document.getElementById('image-preview').classList.add('hidden');
+        }
+        
+        function getFilenameFromUrl(url) {
+            try {
+                const pathname = new URL(url).pathname;
+                const filename = pathname.split('/').pop();
+                return filename || 'image';
+            } catch (e) {
+                return url.split('/').pop() || 'image';
+            }
+        }
+        
+        function loadImageWithFallback(img, originalUrl) {
+            let attemptCount = 0;
+            let timeout;
+            const methods = [
+                // 方法1: 直接加载，不设置crossOrigin
+                () => {
+                    img.crossOrigin = null;
+                    img.src = originalUrl;
+                },
+                // 方法2: 使用crossOrigin = 'anonymous'
+                () => {
+                    img.crossOrigin = 'anonymous';
+                    img.src = originalUrl;
+                },
+                // 方法3: 使用CORS代理服务
+                () => {
+                    img.crossOrigin = null;
+                    img.src = `https://cors-anywhere.herokuapp.com/${originalUrl}`;
+                },
+                // 方法4: 使用另一个CORS代理
+                () => {
+                    img.crossOrigin = null;
+                    img.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
+                }
+            ];
+            
+            const tryNextMethod = () => {
+                if (attemptCount >= methods.length) {
+                    // 所有方法都失败了，显示手动输入选项
+                    showCorsError(originalUrl);
+                    return;
+                }
+                
+                const statusDiv = document.getElementById('url-status');
+                statusDiv.textContent = `🔄 Trying method ${attemptCount + 1}/${methods.length}...`;
+                statusDiv.className = 'url-status loading';
+                
+                // 清除之前的事件监听器和超时
+                img.onload = null;
+                img.onerror = null;
+                if (timeout) clearTimeout(timeout);
+                
+                // 设置新的超时
+                timeout = setTimeout(() => {
+                    attemptCount++;
+                    setTimeout(tryNextMethod, 100);
+                }, 8000); // 每种方法8秒超时
+                
+                // 设置新的事件监听器
+                img.onload = function() {
+                    // 成功加载，继续原有的处理逻辑
+                    clearTimeout(timeout);
+                    
+                    // 更新尺寸输入框
+                    updateImageDimensions(this.width, this.height);
+                    
+                    // 显示图片预览
+                    showImagePreview({
+                        src: this.src, // 使用实际加载的URL
+                        filename: getFilenameFromUrl(originalUrl),
+                        width: this.width,
+                        height: this.height,
+                        filesize: null
+                    });
+                    
+                    // 显示成功状态
+                    const statusDiv = document.getElementById('url-status');
+                    let methodName = '';
+                    switch(attemptCount) {
+                        case 0: methodName = 'Direct Load'; break;
+                        case 1: methodName = 'CORS Mode'; break;
+                        case 2: methodName = 'CORS Proxy 1'; break;
+                        case 3: methodName = 'CORS Proxy 2'; break;
+                    }
+                    statusDiv.textContent = `✅ Image loaded successfully (${this.width}×${this.height}) - using ${methodName}`;
+                    statusDiv.className = 'url-status success';
+                    
+                    const loadBtn = document.getElementById('load-url-btn');
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Reload';
+                    
+                    // 重新计算token
+                    calculateTokens();
+                };
+                
+                img.onerror = function() {
+                    if (timeout) clearTimeout(timeout);
+                    attemptCount++;
+                    setTimeout(tryNextMethod, 500); // Wait 500ms before trying next method
+                };
+                
+                // 执行当前方法
+                methods[attemptCount]();
+            };
+            
+            // 开始尝试
+            tryNextMethod();
+        }
+        
+        function showCorsError(originalUrl) {
+            const statusDiv = document.getElementById('url-status');
+            statusDiv.innerHTML = `
+                ❌ 无法加载图片 - CORS跨域限制<br>
+                <small>该图片服务器不允许跨域访问</small><br>
+                <button type="button" class="manual-input-btn" onclick="showManualInputForUrl('${originalUrl}')">
+                    📝 手动输入图片尺寸
+                </button>
+            `;
+            statusDiv.className = 'url-status error';
+            
+            const loadBtn = document.getElementById('load-url-btn');
+            loadBtn.disabled = false;
+            loadBtn.textContent = '重新加载';
+            
+            document.getElementById('image-preview').classList.add('hidden');
+        }
+        
+        function showManualInputForUrl(url) {
+            // 创建一个弹窗让用户手动输入尺寸
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                                <h3>Manual Image Dimensions</h3>
+            <p>Due to CORS restrictions, image dimensions cannot be automatically retrieved. Please enter manually:</p>
+            <div class="manual-size-inputs">
+                <div class="form-group">
+                    <label>Width (px):</label>
+                    <input type="number" id="manual-width" min="1" placeholder="e.g., 1920" onkeypress="if(event.key==='Enter') document.getElementById('manual-height').focus()">
+                </div>
+                <div class="form-group">
+                    <label>Height (px):</label>
+                    <input type="number" id="manual-height" min="1" placeholder="e.g., 1080" onkeypress="if(event.key==='Enter') applyManualSize('${url}')">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" onclick="applyManualSize('${url}')" class="apply-btn">Apply Dimensions</button>
+                <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
+            </div>
+            <div class="cors-tip">
+                💡 <strong>Tip:</strong> You can right-click the image and select "Inspect" or open it in a new tab to check dimensions
+            </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭弹窗
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // ESC键关闭弹窗
+            const handleEsc = function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handleEsc);
+                }
+            };
+            document.addEventListener('keydown', handleEsc);
+            
+            // 自动聚焦到宽度输入框
+            setTimeout(() => {
+                document.getElementById('manual-width').focus();
+            }, 100);
+        }
+        
+        function applyManualSize(url) {
+            const width = parseInt(document.getElementById('manual-width').value);
+            const height = parseInt(document.getElementById('manual-height').value);
+            
+            if (!width || !height || width <= 0 || height <= 0) {
+                alert('Please enter valid width and height values');
+                return;
+            }
+            
+            // 更新尺寸
+            updateImageDimensions(width, height);
+            
+            // 显示预览（使用原始URL但不能加载）
+            showImagePreview({
+                src: '', // 不显示图片，因为有CORS限制
+                filename: getFilenameFromUrl(url),
+                width: width,
+                height: height,
+                filesize: null
+            });
+            
+            // 更新状态
+            const statusDiv = document.getElementById('url-status');
+            statusDiv.textContent = `✅ Manual dimensions applied (${width}×${height})`;
+            statusDiv.className = 'url-status success';
+            
+            // 重新计算token
+            calculateTokens();
+            
+            // 关闭弹窗
+            closeModal();
+        }
+        
+        function closeModal() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function updateImageDimensions(width, height) {
+            document.getElementById('width').value = width;
+            document.getElementById('height').value = height;
+        }
+        
+        function showImagePreview(imageInfo) {
+            const previewElement = document.getElementById('image-preview');
+            const previewImage = document.getElementById('preview-image');
+            const filenameElement = document.getElementById('preview-filename');
+            const dimensionsElement = document.getElementById('preview-dimensions');
+            const filesizeElement = document.getElementById('preview-filesize');
+            
+            // 更新预览图片
+            if (imageInfo.src) {
+                previewImage.src = imageInfo.src;
+                previewImage.style.display = 'block';
+            } else {
+                previewImage.style.display = 'none';
+            }
+            
+            // 更新信息
+            filenameElement.textContent = imageInfo.filename || '-';
+            dimensionsElement.textContent = imageInfo.width && imageInfo.height 
+                ? `${imageInfo.width} × ${imageInfo.height}` 
+                : '加载中...';
+            filesizeElement.textContent = imageInfo.filesize !== null 
+                ? formatFileSize(imageInfo.filesize) 
+                : '无法获取';
+            
+            // 显示预览区域
+            previewElement.classList.remove('hidden');
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 添加拖拽上传功能
+        const uploadInput = document.getElementById('image-upload');
+        const uploadContainer = document.querySelector('.upload-area');
+        
+        if (uploadContainer) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight(e) {
+                uploadContainer.style.backgroundColor = '#f0f8ff';
+                uploadContainer.style.borderColor = '#007bff';
+            }
+            
+            function unhighlight(e) {
+                uploadContainer.style.backgroundColor = '';
+                uploadContainer.style.borderColor = '';
+            }
+            
+            uploadContainer.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    uploadInput.files = files;
+                    handleImageUpload({ target: { files: files } });
+                }
+            }
+        }
     </script>
 </body>
 </html>
