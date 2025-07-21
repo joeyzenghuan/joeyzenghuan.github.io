@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph Agent Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'JetBrains Mono', monospace;
+            background: #0a0a0f;
+            background-image: 
+                radial-gradient(circle at 20% 20%, #1a1a2e 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, #16213e 0%, transparent 50%),
+                linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            background-attachment: fixed;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 科技感网格背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 浮动粒子效果 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="0.5" fill="%2300ffff" opacity="0.3"/><circle cx="30" cy="25" r="0.3" fill="%23ff0080" opacity="0.4"/><circle cx="60" cy="15" r="0.4" fill="%2300ff80" opacity="0.2"/><circle cx="85" cy="35" r="0.2" fill="%23ffff00" opacity="0.3"/><circle cx="15" cy="50" r="0.3" fill="%23ff8000" opacity="0.25"/><circle cx="45" cy="65" r="0.2" fill="%2380ff00" opacity="0.35"/><circle cx="75" cy="75" r="0.4" fill="%238000ff" opacity="0.3"/><circle cx="25" cy="85" r="0.3" fill="%23ff0040" opacity="0.4"/><circle cx="90" cy="90" r="0.2" fill="%2300ff40" opacity="0.2"/></svg>') repeat;
+            background-size: 200px 200px;
+            animation: particles 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes particles {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-200px, -200px); }
+        }
+
+        .chat-container {
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #2d3561 100%);
+            border-bottom: 3px solid rgba(0, 255, 255, 0.6);
+            color: #00ffff;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        /* 自定义滚动条 */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #00cccc, #cc0066);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: messageSlide 0.5s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #000000;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 6px 25px rgba(0, 255, 255, 0.4);
+            border: 2px solid rgba(0, 255, 255, 0.7);
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.15) 100%);
+            color: #ffffff;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+            font-weight: 500;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(255, 0, 128, 0.3); }
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(45deg, #00ff80, #00ffff);
+            color: #000;
+            order: 1;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(45deg, #ff0080, #8000ff);
+            color: #fff;
+        }
+
+        .chat-input-container {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(45, 53, 97, 0.8) 100%);
+            border-top: 2px solid rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 3px solid rgba(0, 255, 255, 0.5);
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            background: rgba(0, 255, 255, 0.08);
+            color: #ffffff;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .chat-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), 0 0 50px rgba(0, 255, 255, 0.3);
+            background: rgba(0, 255, 255, 0.12);
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #00ffff 0%, #ff0080 100%);
+            color: #000000;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.5), 0 0 40px rgba(255, 0, 128, 0.3);
+            background: linear-gradient(135deg, #00ccff 0%, #ff0099 100%);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: messageSlide 0.5s ease-out;
+        }
+
+        .typing-indicator.show {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+        }
+
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            margin: 0 3px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .config-panel {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.9) 100%);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.4);
+            font-size: 13px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
+            position: relative;
+            z-index: 100000;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-input, .config-input select {
+            padding: 10px 15px;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 10px;
+            font-size: 12px;
+            flex: 1;
+            background: rgba(0, 255, 255, 0.05);
+            color: #ffffff;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
+        }
+
+        .config-input:focus, .config-input select:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), 0 0 40px rgba(0, 255, 255, 0.2);
+            background: rgba(0, 255, 255, 0.1);
+            color: #ffffff;
+            outline: none;
+        }
+
+        /* 专门为select下拉框优化 */
+        .config-input select {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.08) 0%, rgba(128, 0, 255, 0.08) 100%);
+            color: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%2300ffff" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            padding-right: 35px;
+        }
+
+        .config-input select:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.12) 0%, rgba(128, 0, 255, 0.12) 100%);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        /* 强制设置下拉框样式，覆盖浏览器默认 */
+        .config-input select {
+            color-scheme: dark;
+        }
+
+        /* 专门针对Chrome/Safari的下拉选项优化 */
+        @supports (-webkit-appearance: none) {
+            .config-input select option {
+                background-color: #0f0f23 !important;
+                color: #ffffff !important;
+            }
+        }
+
+        /* Firefox特殊处理 */
+        @-moz-document url-prefix() {
+            .config-input select option {
+                background-color: #0f0f23 !important;
+                color: #ffffff !important;
+            }
+            .config-input select option:checked {
+                background-color: #00ffff !important;
+                color: #000000 !important;
+            }
+        }
+
+        .config-input select option {
+            background: #0f0f23 !important;
+            color: #ffffff !important;
+            padding: 10px 15px !important;
+            border: 1px solid rgba(0, 255, 255, 0.2) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            line-height: 1.4 !important;
+        }
+
+        .config-input select option:hover {
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%) !important;
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+
+        .config-input select option:checked, .config-input select option:selected {
+            background: linear-gradient(135deg, #00ffff 0%, #ff0080 100%) !important;
+            color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        /* 针对不同浏览器的选项样式优化 */
+        .config-input select:focus option:checked {
+            background: #00ffff !important;
+            color: #000000 !important;
+        }
+
+        /* Webkit浏览器特殊处理 */
+        .config-input select option[selected] {
+            background: #00ffff !important;
+            color: #000000 !important;
+        }
+
+        .config-label {
+            font-weight: 700;
+            min-width: 100px;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* 新的按钮样式 - New 按钮 */
+        .new-thread-btn {
+            background: linear-gradient(135deg, #ff0080 0%, #8000ff 100%);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 128, 0.3);
+            border: 1px solid rgba(255, 0, 128, 0.5);
+            min-width: 60px;
+        }
+
+        .new-thread-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 0, 128, 0.5), 0 0 30px rgba(128, 0, 255, 0.3);
+            background: linear-gradient(135deg, #ff0099 0%, #9900ff 100%);
+        }
+
+        .new-thread-btn:active {
+            transform: translateY(0);
+        }
+
+        .new-thread-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 0, 128, 0.1) 100%);
+            color: #ff4444;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .streaming-text {
+            position: relative;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: #00ffff;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .tool-call {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tool-call-header {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-result {
+            background: linear-gradient(135deg, rgba(255, 0, 128, 0.1) 0%, rgba(128, 0, 255, 0.1) 100%);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tool-result-header {
+            font-weight: bold;
+            color: #ff0080;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debug-info {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%);
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            margin: 8px 0;
+            font-size: 11px;
+            color: #ffa726;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            backdrop-filter: blur(10px);
+        }
+
+        .debug-toggle {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: linear-gradient(45deg, #ff9800, #ff5722);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .step-info {
+            background: linear-gradient(135deg, rgba(0, 255, 128, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 128, 0.3);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 12px;
+            color: #00ff80;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .json-content {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .show-debug {
+            font-size: 11px;
+            color: #00ffff;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .updating-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ffff;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        .quick-prompts-container {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.8) 0%, rgba(26, 26, 46, 0.7) 100%);
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+            padding: 15px 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-prompts-label {
+            font-size: 13px;
+            color: #00ffff;
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+
+        .quick-prompts {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-prompt-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 128, 0.1) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 10px 18px;
+            font-size: 12px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(15px);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .quick-prompt-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(255, 0, 128, 0.2) 100%);
+            border-color: #00ffff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 255, 255, 0.4), 0 0 30px rgba(255, 0, 128, 0.2);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+
+        .quick-prompt-btn:active {
+            transform: translateY(0);
+        }
+
+        .ai-final-response {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.05) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px 20px 18px 20px;
+            margin: 15px 0;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.15);
+            font-weight: 500;
+            line-height: 1.7;
+            backdrop-filter: blur(15px);
+        }
+
+        .ai-final-response::before {
+            content: "🤖";
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: linear-gradient(45deg, #0a0a0f, #1a1a2e);
+            padding: 6px 10px;
+            border-radius: 15px;
+            font-size: 16px;
+            border: 2px solid #00ffff;
+        }
+
+        .ai-final-response .response-label {
+            color: #00ffff;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+            margin-top: 0;
+        }
+
+        .ai-final-response .response-content {
+            color: #e0e0e0;
+            font-size: 15px;
+            margin: 0;
+        }
+
+        .ai-final-response:hover {
+            transform: translateY(-3px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 12px 30px rgba(0, 255, 255, 0.25);
+        }
+
+        .preview-btn {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: linear-gradient(45deg, #0a0a0f, #1a1a2e);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 6px 10px;
+            font-size: 11px;
+            color: #00ffff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .preview-btn:hover {
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            color: #000;
+        }
+
+        .preview-btn.active {
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            color: #000;
+        }
+
+        .markdown-content {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .markdown-content h1, .markdown-content h2, .markdown-content h3,
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+            margin: 20px 0 12px 0;
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        .markdown-content h1 { font-size: 1.6em; }
+        .markdown-content h2 { font-size: 1.4em; }
+        .markdown-content h3 { font-size: 1.2em; }
+
+        .markdown-content p {
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .markdown-content li {
+            margin: 6px 0;
+        }
+
+        .markdown-content code {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #00ffff;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .markdown-content pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            border: none;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #00ffff;
+            padding-left: 15px;
+            margin: 12px 0;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .markdown-content strong {
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        .markdown-content em {
+            font-style: italic;
+            color: #ff0080;
+        }
+
+        .graph-btn {
+            padding: 8px 16px;
+            font-size: 11px;
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15) 0%, rgba(128, 0, 255, 0.15) 100%);
+            color: #00ffff;
+            margin-left: 10px;
+            height: 36px;
+            width: 80px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .graph-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.25) 0%, rgba(128, 0, 255, 0.25) 100%);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(128, 0, 255, 0.3);
+            transform: translateY(-2px);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            margin: 1% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 95%;
+            height: 95%;
+            max-width: 95vw;
+            max-height: 95vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #0f0f23 0%, #2d3561 100%);
+            color: #00ffff;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .close {
+            color: #00ffff;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: #ff0080;
+            transform: scale(1.2);
+        }
+
+        .modal-body {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .graph-container {
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .graph-svg-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        .graph-svg {
+            display: block;
+            background: transparent;
+            border-radius: 8px;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(15, 15, 35, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .graph-control-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            margin: 3px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #00ffff;
+        }
+
+        .graph-control-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .graph-node {
+            fill: rgba(0, 255, 255, 0.1);
+            stroke: #00ffff;
+            stroke-width: 2;
+            cursor: pointer;
+        }
+
+        .graph-node:hover {
+            fill: rgba(0, 255, 255, 0.2);
+        }
+
+        .graph-node-start {
+            fill: rgba(0, 255, 128, 0.1);
+            stroke: #00ff80;
+        }
+
+        .graph-node-end {
+            fill: rgba(255, 0, 128, 0.1);
+            stroke: #ff0080;
+        }
+
+        .graph-edge {
+            stroke: #666;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .graph-edge-conditional {
+            stroke: #ff9800;
+            stroke-dasharray: 5,5;
+        }
+
+        .graph-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: central;
+            fill: #e0e0e0;
+            pointer-events: none;
+        }
+
+        .graph-edge-label {
+            font-size: 10px;
+            fill: #aaa;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 18px;
+            color: #00ffff;
+        }
+
+        /* 按钮通用样式优化 */
+        button {
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 清理按钮样式 */
+        .clear-chat-btn {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff4444 0%, #ff6b6b 100%);
+            border: 2px solid rgba(255, 68, 68, 0.6);
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4), 0 0 30px rgba(255, 68, 68, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            user-select: none;
+        }
+
+        .clear-chat-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 68, 68, 0.6), 0 0 40px rgba(255, 68, 68, 0.4);
+            background: linear-gradient(135deg, #ff3333 0%, #ff5555 100%);
+            border-color: rgba(255, 68, 68, 0.8);
+        }
+
+        .clear-chat-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .clear-chat-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-chat-btn .tooltip {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            background: rgba(15, 15, 35, 0.95);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 1001;
+        }
+
+        .clear-chat-btn:hover .tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .clear-chat-btn .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 20px;
+            border: 6px solid transparent;
+            border-top-color: rgba(15, 15, 35, 0.95);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .clear-chat-btn {
+                bottom: 100px;
+                right: 20px;
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+            
+            .clear-chat-btn .tooltip {
+                bottom: 60px;
+                font-size: 11px;
+            }
+            
+            .chat-header {
+                padding: 15px 20px;
+                font-size: 1.2em;
+            }
+            
+            .chat-messages {
+                padding: 15px 20px;
+            }
+            
+            .chat-input-container {
+                padding: 20px;
+            }
+            
+            .config-panel {
+                padding: 15px 20px;
+            }
+            
+            .quick-prompts-container {
+                padding: 12px 20px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .quick-prompts {
+                gap: 8px;
+            }
+            
+            .quick-prompt-btn {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+            
+            .modal-content {
+                width: 98%;
+                height: 98%;
+                margin: 1% auto;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .graph-btn {
+                width: 60px;
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+            
+            .config-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .config-label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* 自定义下拉菜单样式 */
+        .custom-select-container {
+            position: relative;
+            display: inline-block;
+            flex: 1;
+        }
+
+        .custom-select {
+            display: none; /* 隐藏原生select */
+        }
+
+        .custom-select-trigger {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.08) 0%, rgba(128, 0, 255, 0.08) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 10px 40px 10px 15px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .custom-select-trigger:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.12) 0%, rgba(128, 0, 255, 0.12) 100%);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        .custom-select-trigger.active {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .custom-select-arrow {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #00ffff;
+            transition: transform 0.3s ease;
+        }
+
+        .custom-select-trigger.active .custom-select-arrow {
+            transform: rotate(180deg);
+        }
+
+        .custom-select-options {
+            position: fixed;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            z-index: 999999;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            display: none;
+            animation: dropdownFadeIn 0.3s ease-out;
+            min-width: 200px;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-select-options.show {
+            display: block;
+        }
+
+        .custom-select-option {
+            padding: 12px 15px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-select-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-select-option:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(128, 0, 255, 0.2) 100%);
+            color: #00ffff;
+            transform: translateX(5px);
+        }
+
+        .custom-select-option.selected {
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .custom-select-option.selected:hover {
+            background: linear-gradient(135deg, #00ccff 0%, #0066cc 100%);
+            transform: translateX(0);
+        }
+
+        /* 自定义滚动条 for select options */
+        .custom-select-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            🤖 LangGraph Agent Chat
+        </div>
+        
+                 <div class="config-panel">
+             <div class="config-row">
+                 <label class="config-label">Base URL:</label>
+                 <input type="text" class="config-input" id="baseUrl" value="https://jp.westiedoubao.com:2024">
+             </div>
+             <div class="config-row">
+                 <label class="config-label">Thread ID:</label>
+                 <input type="text" class="config-input" id="threadId" value="Initializing..." readonly>
+                 <button onclick="generateNewThreadId()" class="new-thread-btn">New</button>
+             </div>
+             <div class="config-row">
+                 <label class="config-label">Assistant:</label>
+                                   <div class="custom-select-container">
+                      <div class="custom-select-trigger" data-value="6bc4a917-fd2e-5800-a61c-30ecb009f8f4">
+                          🤖 Agentic RAG (ChromaDB)
+                          <div class="custom-select-arrow"></div>
+                      </div>
+                      <div class="custom-select-options">
+                          <div class="custom-select-option selected" data-value="6bc4a917-fd2e-5800-a61c-30ecb009f8f4">🤖 Agentic RAG (ChromaDB)</div>
+                          <div class="custom-select-option" data-value="0f400a97-4c28-588f-be5d-d065816da027">🔧 React Agent with Math tool</div>
+                          <div class="custom-select-option" data-value="4fa68834-b850-5590-9ef4-03f78cac5999">📊 Research Assistant</div>
+                          
+                      </div>
+                  </div>
+                 <button onclick="showAssistantGraph()" class="graph-btn">Graph</button>
+             </div>
+             <div class="config-row">
+                 <label class="config-label">Show Debug:</label>
+                 <input type="checkbox" id="showDebug" checked>
+                 <label class="config-label" style="margin-left: 15px;">Show Tools:</label>
+                 <input type="checkbox" id="showTools" checked>
+                 <span style="margin-left: 20px; font-size: 13px;">
+                    <a href="https://jp.westiedoubao.com:2024/docs" target="_blank" style="color:#00ffff;text-decoration:underline;margin-right:10px;">📚 API Reference</a>
+                    <a href="https://smith.langchain.com/studio/thread?baseUrl=https%3A%2F%2Fjp.westiedoubao.com%3A2024" target="_blank" style="color:#00ffff;text-decoration:underline;margin-right:10px;">🧑‍💻 LangGraph Studio UI</a>
+                    <span style="color:#fff;">✍️ Joey.Zeng@microsoft.com</span>
+                 </span>
+             </div>
+         </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    Hello! I'm your LangGraph Agent assistant. I can help you with calculations and various tasks. What would you like to know?
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="message-avatar">🤖</div>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="quick-prompts-container">
+            <div class="quick-prompts-label">⚡ Quick Start Prompts:</div>
+            <div class="quick-prompts">
+                <button class="quick-prompt-btn" onclick="setQuickPrompt('Which types of content will be blocked by Azure OpenAI content filter?')">
+                    🛡️ Azure OpenAI Content Filter
+                </button>
+                <button class="quick-prompt-btn" onclick="setQuickPrompt('45*88-99=?')">
+                    🧮 Math Calculation
+                </button>
+                <button class="quick-prompt-btn" onclick="setQuickPrompt('美国Agent 2025最火热的几个产品的深度研究')">
+                    📊 AI Agent Research
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <form class="chat-input-form" id="chatForm">
+                <input type="text" class="chat-input" id="messageInput" placeholder="Type your message..." autocomplete="off">
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+
+        <!-- 清理聊天按钮 -->
+        <button class="clear-chat-btn" onclick="generateNewThreadId()" title="清理聊天记录">
+            🗑️
+            <div class="tooltip">清理聊天记录</div>
+        </button>
+    </div>
+
+    <!-- Graph Modal -->
+    <div id="graphModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔀 Assistant Graph Structure</h2>
+                <button class="close" onclick="closeGraphModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="graph-container">
+                    <div class="graph-controls">
+                        <button class="graph-control-btn" onclick="zoomIn()" title="Zoom In">+</button>
+                        <button class="graph-control-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+                        <button class="graph-control-btn" onclick="fitToView()" title="Fit to View">⊞</button>
+                        <button class="graph-control-btn" onclick="resetZoom()" title="Reset Zoom">⌂</button>
+                    </div>
+                    <div id="graphContent">
+                        <div class="loading-spinner">Loading graph...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatBot {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.chatForm = document.getElementById('chatForm');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                
+                this.currentResponseContainer = null;
+                this.currentStreamingMessage = null;
+                this.isStreaming = false;
+                this.stepCounter = 0;
+                this.currentToolCalls = new Map(); // Track tool calls by ID
+
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.chatForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendMessage();
+                });
+
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+            }
+
+            generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            addMessage(content, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = isUser ? '👤' : '🤖';
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                return messageContent;
+            }
+
+            createResponseContainer() {
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'message assistant';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = '🤖';
+                
+                const responseContent = document.createElement('div');
+                responseContent.className = 'message-content';
+                
+                responseDiv.appendChild(avatar);
+                responseDiv.appendChild(responseContent);
+                
+                this.chatMessages.appendChild(responseDiv);
+                this.scrollToBottom();
+                
+                return responseContent;
+            }
+
+            addToolCall(toolCall) {
+                if (!this.currentResponseContainer) return;
+                
+                const showTools = document.getElementById('showTools').checked;
+                if (!showTools) return;
+
+                const isComplete = toolCall.args && typeof toolCall.args === 'object' && 
+                                 Object.keys(toolCall.args).length > 0 && 
+                                 !JSON.stringify(toolCall.args).includes('undefined');
+
+                // Check if tool call already exists
+                if (this.currentToolCalls.has(toolCall.id)) {
+                    // Update existing tool call
+                    const existingToolDiv = this.currentToolCalls.get(toolCall.id);
+                    const headerDiv = existingToolDiv.querySelector('.tool-call-header');
+                    const argsDiv = existingToolDiv.querySelector('.json-content');
+                    
+                    if (argsDiv) {
+                        argsDiv.textContent = JSON.stringify(toolCall.args, null, 2);
+                    }
+                    
+                    // Add or remove updating indicator
+                    if (headerDiv) {
+                        const existingIndicator = headerDiv.querySelector('.updating-indicator');
+                        if (!isComplete && !existingIndicator) {
+                            const indicator = document.createElement('span');
+                            indicator.className = 'updating-indicator';
+                            headerDiv.appendChild(indicator);
+                        } else if (isComplete && existingIndicator) {
+                            existingIndicator.remove();
+                        }
+                    }
+                } else {
+                    // Create new tool call
+                    const toolDiv = document.createElement('div');
+                    toolDiv.className = 'tool-call';
+                    toolDiv.setAttribute('data-tool-id', toolCall.id);
+                    
+                    const header = document.createElement('div');
+                    header.className = 'tool-call-header';
+                    header.innerHTML = `🔧 Tool Call: <strong>${toolCall.name}</strong>`;
+                    
+                    // Add updating indicator if not complete
+                    if (!isComplete) {
+                        const indicator = document.createElement('span');
+                        indicator.className = 'updating-indicator';
+                        header.appendChild(indicator);
+                    }
+                    
+                    const args = document.createElement('div');
+                    args.className = 'json-content';
+                    args.textContent = JSON.stringify(toolCall.args, null, 2);
+                    
+                    toolDiv.appendChild(header);
+                    toolDiv.appendChild(args);
+                    
+                    this.currentResponseContainer.appendChild(toolDiv);
+                    this.currentToolCalls.set(toolCall.id, toolDiv);
+                }
+                
+                this.scrollToBottom();
+            }
+
+            addToolResult(toolResult) {
+                if (!this.currentResponseContainer) return;
+                
+                const showTools = document.getElementById('showTools').checked;
+                if (!showTools) return;
+
+                // Remove updating indicator from corresponding tool call
+                if (toolResult.tool_call_id) {
+                    const toolCallDiv = this.currentToolCalls.get(toolResult.tool_call_id);
+                    if (toolCallDiv) {
+                        const indicator = toolCallDiv.querySelector('.updating-indicator');
+                        if (indicator) {
+                            indicator.remove();
+                        }
+                    }
+                }
+
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'tool-result';
+                
+                const header = document.createElement('div');
+                header.className = 'tool-result-header';
+                header.innerHTML = `⚙️ Tool Result: <strong>${toolResult.name}</strong>`;
+                
+                const content = document.createElement('div');
+                content.className = 'json-content';
+                content.textContent = toolResult.content;
+                
+                resultDiv.appendChild(header);
+                resultDiv.appendChild(content);
+                
+                this.currentResponseContainer.appendChild(resultDiv);
+                this.scrollToBottom();
+            }
+
+            addDebugInfo(type, data) {
+                if (!this.currentResponseContainer) return;
+                
+                const showDebug = document.getElementById('showDebug').checked;
+                if (!showDebug) return;
+
+                // Hide checkpoint related content
+                if (type === 'checkpoint') {
+                    return;
+                }
+
+                const debugDiv = document.createElement('div');
+                debugDiv.className = 'debug-info';
+                
+                if (type === 'task') {
+                    debugDiv.innerHTML = `
+                        <strong>📋 Task:</strong> ${data.payload.name}
+                        <div class="show-debug" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">Show details</div>
+                        <div class="json-content" style="display: none;">${JSON.stringify(data.payload, null, 2)}</div>
+                    `;
+                } else if (type === 'task_result') {
+                    debugDiv.innerHTML = `
+                        <strong>✅ Task Result:</strong> ${data.payload.name}
+                        <div class="show-debug" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">Show details</div>
+                        <div class="json-content" style="display: none;">${JSON.stringify(data.payload.result, null, 2)}</div>
+                    `;
+                }
+                
+                this.currentResponseContainer.appendChild(debugDiv);
+                this.scrollToBottom();
+            }
+
+            addStepInfo(step, nodeName) {
+                if (!this.currentResponseContainer) return;
+                
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step-info';
+                stepDiv.textContent = `Step ${step}: Processing in ${nodeName}`;
+                
+                this.currentResponseContainer.appendChild(stepDiv);
+                this.scrollToBottom();
+            }
+
+            addStreamingResponse(content, isComplete = false) {
+                if (!this.currentStreamingMessage) {
+                    this.currentStreamingMessage = document.createElement('div');
+                    this.currentStreamingMessage.style.marginTop = '10px';
+                    this.currentResponseContainer.appendChild(this.currentStreamingMessage);
+                }
+                
+                if (isComplete) {
+                    // Generate unique ID for this response
+                    const responseId = 'response_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // Create final response with enhanced styling and preview button
+                    this.currentStreamingMessage.className = 'ai-final-response';
+                    this.currentStreamingMessage.innerHTML = `
+                        <button class="preview-btn" onclick="toggleMarkdownPreview('${responseId}')">📄 Preview</button>
+                        <span class="response-label">Final Answer</span>
+                        <div class="response-content" id="${responseId}" data-original-content="${this.escapeHtml(content)}">${content}</div>
+                    `;
+                } else {
+                    this.currentStreamingMessage.innerHTML = `<span class="streaming-text">${content}<span class="cursor"></span></span>`;
+                }
+                this.scrollToBottom();
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            showTypingIndicator() {
+                this.typingIndicator.classList.add('show');
+                this.scrollToBottom();
+            }
+
+            hideTypingIndicator() {
+                this.typingIndicator.classList.remove('show');
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `Error: ${message}`;
+                this.chatMessages.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            setInputState(disabled) {
+                this.messageInput.disabled = disabled;
+                this.sendButton.disabled = disabled;
+                this.sendButton.textContent = disabled ? 'Sending...' : 'Send';
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isStreaming) return;
+
+                // Add user message
+                this.addMessage(message, true);
+                this.messageInput.value = '';
+                
+                // Set loading state
+                this.setInputState(true);
+                this.isStreaming = true;
+                this.showTypingIndicator();
+
+                try {
+                    await this.streamResponse(message);
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showError(error.message || 'Failed to send message');
+                } finally {
+                    this.setInputState(false);
+                    this.isStreaming = false;
+                    this.hideTypingIndicator();
+                    this.currentResponseContainer = null;
+                    this.currentStreamingMessage = null;
+                    this.stepCounter = 0;
+                    this.currentToolCalls.clear(); // Clear tool calls state
+                }
+            }
+
+            async streamResponse(message) {
+                const baseUrl = document.getElementById('baseUrl').value;
+                const threadId = document.getElementById('threadId').value;
+                const assistantId = getCurrentAssistantId();
+
+                const url = `${baseUrl}/threads/${threadId}/runs/stream`;
+                
+                const payload = {
+                    input: {
+                        messages: [{
+                            content: message,
+                            type: "human"
+                        }]
+                    },
+                    config: {
+                        configurable: {
+                            thread_id: threadId
+                        }
+                    },
+                    metadata: {
+                        from_studio: true,
+                        LANGGRAPH_API_URL: baseUrl
+                    },
+                    stream_mode: ["debug", "messages"],
+                    stream_subgraphs: true,
+                    assistant_id: assistantId,
+                    interrupt_before: [],
+                    interrupt_after: [],
+                    multitask_strategy: "rollback",
+                    checkpoint_during: true
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'Origin': 'https://smith.langchain.com',
+                        'Pragma': 'no-cache',
+                        'Referer': 'https://smith.langchain.com/',
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'cross-site',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+                        'X-Tenant-Id': '',
+                        'content-type': 'application/json',
+                        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'x-auth-scheme': 'langsmith'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                this.hideTypingIndicator();
+                this.currentResponseContainer = this.createResponseContainer();
+                this.currentToolCalls.clear(); // Clear tool calls for new response
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let currentContent = '';
+
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep incomplete line in buffer
+
+                        for (const line of lines) {
+                            if (line.startsWith('event: ')) {
+                                const eventType = line.substring(7);
+                                continue;
+                            }
+                            
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const jsonStr = line.substring(6);
+                                    const data = JSON.parse(jsonStr);
+                                    
+                                    // Handle different types of events
+                                    this.processStreamData(data);
+                                    
+                                } catch (e) {
+                                    // Not all data lines are JSON, skip parsing errors
+                                    console.log('Skipping non-JSON line:', line);
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    reader.releaseLock();
+                }
+            }
+
+            processStreamData(data) {
+                // Handle debug events
+                if (data.step !== undefined && data.type) {
+                    if (data.type === 'task') {
+                        this.addStepInfo(data.step, data.payload.name);
+                        this.addDebugInfo('task', data);
+                    } else if (data.type === 'task_result') {
+                        this.addDebugInfo('task_result', data);
+                    } else if (data.type === 'checkpoint') {
+                        // Skip checkpoint processing - hide checkpoint related content
+                        return;
+                    }
+                    return;
+                }
+
+                // Handle message arrays (tool calls and responses)
+                if (Array.isArray(data)) {
+                    for (const item of data) {
+                        if (item.type === 'ai' && item.tool_calls && item.tool_calls.length > 0) {
+                            // Handle tool calls
+                            for (const toolCall of item.tool_calls) {
+                                this.addToolCall(toolCall);
+                            }
+                        } else if (item.type === 'tool') {
+                            // Handle tool results
+                            this.addToolResult(item);
+                        } else if (item.type === 'ai' && item.content) {
+                            // Handle AI responses
+                            const isComplete = item.response_metadata && item.response_metadata.finish_reason;
+                            this.addStreamingResponse(item.content, isComplete);
+                        }
+                    }
+                }
+
+                // Handle metadata
+                if (data.run_id && Object.keys(data).length === 1) {
+                    // This is likely metadata, we can ignore or show minimal info
+                    return;
+                }
+            }
+        }
+
+        // Set quick prompt function
+        function setQuickPrompt(prompt) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = prompt;
+            messageInput.focus();
+            
+            // Optional: Auto-send the message
+            // Uncomment the following lines if you want to auto-send
+            // const sendButton = document.getElementById('sendButton');
+            // sendButton.click();
+        }
+
+        // Toggle markdown preview function
+        function toggleMarkdownPreview(responseId) {
+            const element = document.getElementById(responseId);
+            const button = element.parentElement.querySelector('.preview-btn');
+            
+            if (!element) return;
+            
+            if (element.classList.contains('markdown-content')) {
+                // Switch back to original content
+                element.innerHTML = element.getAttribute('data-original-content');
+                element.classList.remove('markdown-content');
+                button.textContent = '📄 Preview';
+                button.classList.remove('active');
+            } else {
+                // Switch to markdown rendered content
+                const originalContent = element.getAttribute('data-original-content');
+                const renderedContent = renderMarkdown(originalContent);
+                element.innerHTML = renderedContent;
+                element.classList.add('markdown-content');
+                button.textContent = '📝 Raw';
+                button.classList.add('active');
+            }
+        }
+
+        // Simple markdown renderer
+        function renderMarkdown(text) {
+            // Basic markdown parsing
+            let html = text
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/_(.*?)_/g, '<em>$1</em>')
+                
+                // Code blocks
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                
+                // Inline code
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                
+                // Blockquotes
+                .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+                
+                // Line breaks
+                .replace(/\n/g, '<br>');
+
+            // Handle lists
+            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>');
+            
+            // Wrap consecutive <li> elements in <ul>
+            html = html.replace(/(<li>.*?<\/li>)(?:\s*<br>\s*<li>.*?<\/li>)*/g, function(match) {
+                return '<ul>' + match.replace(/<br>\s*/g, '') + '</ul>';
+            });
+            
+            // Handle paragraphs
+            const paragraphs = html.split('<br><br>');
+            html = paragraphs.map(p => {
+                p = p.trim();
+                if (p && !p.startsWith('<') && !p.endsWith('>')) {
+                    return '<p>' + p.replace(/<br>/g, ' ') + '</p>';
+                }
+                return p;
+            }).join('');
+            
+                         return html;
+         }
+
+        // Show assistant graph
+        async function showAssistantGraph() {
+            const modal = document.getElementById('graphModal');
+            const graphContent = document.getElementById('graphContent');
+            const assistantId = getCurrentAssistantId();
+            const baseUrl = document.getElementById('baseUrl').value;
+            
+            modal.style.display = 'block';
+            graphContent.innerHTML = '<div class="loading-spinner">Loading graph...</div>';
+            
+            try {
+                const response = await fetch(`${baseUrl}/assistants/${assistantId}/graph`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'Origin': 'https://smith.langchain.com',
+                        'Pragma': 'no-cache',
+                        'Referer': 'https://smith.langchain.com/',
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'cross-site',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+                        'X-Tenant-Id': '',
+                        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'x-auth-scheme': 'langsmith'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const graphData = await response.json();
+                renderGraph(graphData);
+                
+            } catch (error) {
+                console.error('Error fetching graph:', error);
+                graphContent.innerHTML = `
+                    <div class="loading-spinner" style="color: #f44336;">
+                        ❌ Error loading graph: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Close graph modal
+        function closeGraphModal() {
+            document.getElementById('graphModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('graphModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Global variables for zoom and pan
+        let currentZoom = 1;
+        let currentSvg = null;
+        let svgWidth = 800;
+        let svgHeight = 600;
+
+        // Render graph visualization
+        function renderGraph(graphData) {
+            const graphContent = document.getElementById('graphContent');
+            const { nodes, edges } = graphData;
+            
+            // Calculate node positions first to determine required size
+            const nodePositions = calculateNodePositions(nodes, edges);
+            
+            // Calculate required SVG dimensions
+            const { width, height } = calculateSvgDimensions(nodePositions);
+            svgWidth = width;
+            svgHeight = height;
+            
+            // Create SVG container
+            const svgContainer = document.createElement('div');
+            svgContainer.className = 'graph-svg-container';
+            
+            // Create SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'graph-svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            currentSvg = svg;
+            
+            // Add arrow marker definition
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#666');
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            
+            // Node positions already calculated above
+            
+            // Draw edges first (so they appear behind nodes)
+            edges.forEach(edge => {
+                const sourcePos = nodePositions[edge.source];
+                const targetPos = nodePositions[edge.target];
+                
+                if (sourcePos && targetPos) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourcePos.x);
+                    line.setAttribute('y1', sourcePos.y);
+                    line.setAttribute('x2', targetPos.x);
+                    line.setAttribute('y2', targetPos.y);
+                    line.setAttribute('class', edge.conditional ? 'graph-edge graph-edge-conditional' : 'graph-edge');
+                    svg.appendChild(line);
+                    
+                    // Add edge label if data exists
+                    if (edge.data) {
+                        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        const midX = (sourcePos.x + targetPos.x) / 2;
+                        const midY = (sourcePos.y + targetPos.y) / 2;
+                        label.setAttribute('x', midX);
+                        label.setAttribute('y', midY - 5);
+                        label.setAttribute('class', 'graph-edge-label');
+                        label.textContent = edge.data;
+                        svg.appendChild(label);
+                    }
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const position = nodePositions[node.id];
+                if (!position) return;
+                
+                // Determine node type
+                let nodeClass = 'graph-node';
+                if (node.id === '__start__') nodeClass += ' graph-node-start';
+                else if (node.id === '__end__') nodeClass += ' graph-node-end';
+                
+                // Create node circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', position.x);
+                circle.setAttribute('cy', position.y);
+                circle.setAttribute('r', '30');
+                circle.setAttribute('class', nodeClass);
+                svg.appendChild(circle);
+                
+                // Create node label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', position.x);
+                text.setAttribute('y', position.y);
+                text.setAttribute('class', 'graph-text');
+                
+                // Format node name for display
+                let displayName = node.data?.name || node.id;
+                if (displayName === '__start__') displayName = 'START';
+                else if (displayName === '__end__') displayName = 'END';
+                
+                // Split long names into multiple lines
+                if (displayName.length > 8) {
+                    const lines = splitText(displayName, 8);
+                    lines.forEach((line, index) => {
+                        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                        tspan.setAttribute('x', position.x);
+                        tspan.setAttribute('dy', index === 0 ? 0 : '12');
+                        tspan.textContent = line;
+                        text.appendChild(tspan);
+                    });
+                } else {
+                    text.textContent = displayName;
+                }
+                
+                svg.appendChild(text);
+            });
+            
+            // Replace content
+            svgContainer.appendChild(svg);
+            graphContent.innerHTML = '';
+            graphContent.appendChild(svgContainer);
+            
+            // Reset zoom and add mouse wheel support
+            currentZoom = 1;
+            
+            // Add mouse wheel zoom support
+            svgContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                currentZoom *= delta;
+                updateSvgTransform();
+            });
+            
+            // Auto-fit to view after rendering
+            setTimeout(() => {
+                fitToView();
+            }, 100);
+        }
+        
+        // Calculate required SVG dimensions based on node positions
+        function calculateSvgDimensions(nodePositions) {
+            if (!nodePositions || Object.keys(nodePositions).length === 0) {
+                return { width: 800, height: 600 };
+            }
+            
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            Object.values(nodePositions).forEach(pos => {
+                minX = Math.min(minX, pos.x);
+                maxX = Math.max(maxX, pos.x);
+                minY = Math.min(minY, pos.y);
+                maxY = Math.max(maxY, pos.y);
+            });
+            
+            // Add padding
+            const padding = 100;
+            const nodeRadius = 40; // Account for node size
+            
+            const width = Math.max(800, maxX - minX + 2 * padding + 2 * nodeRadius);
+            const height = Math.max(600, maxY - minY + 2 * padding + 2 * nodeRadius);
+            
+            return { width, height };
+        }
+
+        // Calculate node positions using a simple layered layout
+        function calculateNodePositions(nodes, edges) {
+            const positions = {};
+            const layers = [];
+            const visited = new Set();
+            
+            // Find start node
+            const startNode = nodes.find(n => n.id === '__start__');
+            if (!startNode) return positions;
+            
+            // Build adjacency list
+            const adjacency = {};
+            nodes.forEach(node => adjacency[node.id] = []);
+            edges.forEach(edge => {
+                if (adjacency[edge.source]) {
+                    adjacency[edge.source].push(edge.target);
+                }
+            });
+            
+            // BFS to create layers
+            let queue = [startNode.id];
+            let currentLayer = 0;
+            
+            while (queue.length > 0) {
+                const currentLevelSize = queue.length;
+                layers[currentLayer] = [];
+                
+                for (let i = 0; i < currentLevelSize; i++) {
+                    const nodeId = queue.shift();
+                    if (visited.has(nodeId)) continue;
+                    
+                    visited.add(nodeId);
+                    layers[currentLayer].push(nodeId);
+                    
+                    // Add neighbors to queue
+                    if (adjacency[nodeId]) {
+                        adjacency[nodeId].forEach(neighbor => {
+                            if (!visited.has(neighbor)) {
+                                queue.push(neighbor);
+                            }
+                        });
+                    }
+                }
+                
+                if (layers[currentLayer].length === 0) {
+                    layers.pop();
+                    break;
+                }
+                
+                currentLayer++;
+            }
+            
+            // Add any remaining nodes to the last layer
+            nodes.forEach(node => {
+                if (!visited.has(node.id)) {
+                    if (layers[layers.length - 1]) {
+                        layers[layers.length - 1].push(node.id);
+                    } else {
+                        layers.push([node.id]);
+                    }
+                }
+            });
+            
+            // Calculate positions with dynamic spacing
+            const layerHeight = 120;
+            const minNodeSpacing = 140;
+            const startY = 80;
+            const startX = 100;
+            
+            // Calculate maximum nodes in any layer to determine spacing
+            const maxNodesInLayer = Math.max(...layers.map(layer => layer.length));
+            const nodeSpacing = Math.max(minNodeSpacing, 800 / (maxNodesInLayer + 1));
+            
+            layers.forEach((layer, layerIndex) => {
+                const y = startY + layerIndex * layerHeight;
+                const totalWidth = (layer.length - 1) * nodeSpacing;
+                const availableWidth = Math.max(800, totalWidth + 200);
+                const startXForLayer = startX + (availableWidth - totalWidth) / 2;
+                
+                layer.forEach((nodeId, nodeIndex) => {
+                    positions[nodeId] = {
+                        x: startXForLayer + nodeIndex * nodeSpacing,
+                        y: y
+                    };
+                });
+            });
+            
+            return positions;
+        }
+
+        // Zoom and pan controls
+        function zoomIn() {
+            if (!currentSvg) return;
+            currentZoom *= 1.2;
+            updateSvgTransform();
+        }
+        
+        function zoomOut() {
+            if (!currentSvg) return;
+            currentZoom /= 1.2;
+            updateSvgTransform();
+        }
+        
+        function resetZoom() {
+            if (!currentSvg) return;
+            currentZoom = 1;
+            currentSvg.style.transform = '';
+            currentSvg.setAttribute('width', svgWidth);
+            currentSvg.setAttribute('height', svgHeight);
+        }
+        
+        function fitToView() {
+            if (!currentSvg) return;
+            const container = document.querySelector('.graph-container');
+            const containerWidth = container.clientWidth - 60; // Account for padding and scrollbar
+            const containerHeight = container.clientHeight - 60;
+            
+            const scaleX = containerWidth / svgWidth;
+            const scaleY = containerHeight / svgHeight;
+            currentZoom = Math.min(scaleX, scaleY, 0.9); // Ensure some margin
+            
+            updateSvgTransform();
+            
+            // Center the SVG in the container
+            const svgContainer = document.querySelector('.graph-svg-container');
+            if (svgContainer) {
+                svgContainer.style.alignItems = 'center';
+                svgContainer.style.justifyContent = 'center';
+            }
+        }
+        
+        function updateSvgTransform() {
+            if (!currentSvg) return;
+            const newWidth = svgWidth * currentZoom;
+            const newHeight = svgHeight * currentZoom;
+            
+            currentSvg.setAttribute('width', newWidth);
+            currentSvg.setAttribute('height', newHeight);
+        }
+
+        // Helper function to split text into lines
+        function splitText(text, maxLength) {
+            const words = text.split(/[-_]/);
+            const lines = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+                if ((currentLine + word).length <= maxLength) {
+                    currentLine += (currentLine ? '-' : '') + word;
+                } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            
+            if (currentLine) lines.push(currentLine);
+            return lines.length > 0 ? lines : [text.substring(0, maxLength)];
+        }
+
+        // Clear chat messages function
+        function clearChatMessages() {
+            const chatMessages = document.getElementById('chatMessages');
+            // Keep only the initial assistant message, remove all others
+            const initialMessage = chatMessages.querySelector('.message.assistant');
+            chatMessages.innerHTML = '';
+            if (initialMessage) {
+                chatMessages.appendChild(initialMessage);
+            } else {
+                // Add default welcome message if no initial message exists
+                const welcomeDiv = document.createElement('div');
+                welcomeDiv.className = 'message assistant';
+                welcomeDiv.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        Hello! I'm your LangGraph Agent assistant. I can help you with calculations and various tasks. What would you like to know?
+                    </div>
+                `;
+                chatMessages.appendChild(welcomeDiv);
+            }
+        }
+
+        async function generateNewThreadId() {
+            const button = event.target;
+            const isClearButton = button.classList.contains('clear-chat-btn');
+            const originalContent = isClearButton ? button.innerHTML : button.textContent;
+            
+            try {
+                // Disable button and show loading
+                button.disabled = true;
+                
+                if (isClearButton) {
+                    // For clear button, just change the emoji
+                    button.innerHTML = '⏳<div class="tooltip">创建中...</div>';
+                } else {
+                    // For New button, change text
+                    button.textContent = 'Creating...';
+                }
+                
+                const baseUrl = document.getElementById('baseUrl').value;
+                const url = `${baseUrl}/threads`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'Origin': 'https://smith.langchain.com',
+                        'Pragma': 'no-cache',
+                        'Referer': 'https://smith.langchain.com/',
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'cross-site',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+                        'X-Tenant-Id': '',
+                        'content-type': 'application/json',
+                        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'x-auth-scheme': 'langsmith'
+                    },
+                    body: JSON.stringify({ metadata: {} })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.thread_id) {
+                    document.getElementById('threadId').value = data.thread_id;
+                    
+                    // Clear chat messages when creating new thread
+                    clearChatMessages();
+                    
+                    // Show success feedback
+                    if (isClearButton) {
+                        button.innerHTML = '✅<div class="tooltip">清理完成!</div>';
+                        button.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)';
+                    } else {
+                        button.textContent = 'Created!';
+                        button.style.background = '#4CAF50';
+                    }
+                    
+                    setTimeout(() => {
+                        if (isClearButton) {
+                            button.innerHTML = originalContent;
+                        } else {
+                            button.textContent = originalContent;
+                        }
+                        button.style.background = '';
+                    }, 1500);
+                } else {
+                    throw new Error('No thread_id in response');
+                }
+
+            } catch (error) {
+                console.error('Error creating new thread:', error);
+                
+                // Show error feedback
+                if (isClearButton) {
+                    button.innerHTML = '❌<div class="tooltip">创建失败!</div>';
+                    button.style.background = 'linear-gradient(135deg, #f44336 0%, #EF5350 100%)';
+                } else {
+                    button.textContent = 'Error!';
+                    button.style.background = '#f44336';
+                }
+                
+                setTimeout(() => {
+                    if (isClearButton) {
+                        button.innerHTML = originalContent;
+                    } else {
+                        button.textContent = originalContent;
+                    }
+                    button.style.background = '';
+                }, 2000);
+                
+                // Fallback to client-side generation
+                const fallbackThreadId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+                document.getElementById('threadId').value = fallbackThreadId;
+                
+                // Clear chat messages even in fallback case
+                clearChatMessages();
+                
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // Custom Select functionality
+        function initializeCustomSelect() {
+            const trigger = document.querySelector('.custom-select-trigger');
+            const options = document.querySelector('.custom-select-options');
+            const optionItems = document.querySelectorAll('.custom-select-option');
+            
+            if (!trigger || !options) return;
+            
+            // Set initial selected state
+            const initialValue = trigger.getAttribute('data-value');
+            optionItems.forEach(option => {
+                if (option.getAttribute('data-value') === initialValue) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Toggle dropdown
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isActive = trigger.classList.contains('active');
+                
+                if (isActive) {
+                    closeCustomSelect();
+                } else {
+                    openCustomSelect();
+                }
+            });
+            
+            // Option selection
+            optionItems.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent;
+                    
+                    // Update trigger
+                    trigger.setAttribute('data-value', value);
+                    trigger.innerHTML = text + '<div class="custom-select-arrow"></div>';
+                    
+                    // Update selected state
+                    optionItems.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // Close dropdown
+                    closeCustomSelect();
+                    
+                    // Update any hidden input if needed
+                    const hiddenInput = document.getElementById('assistantId');
+                    if (hiddenInput) {
+                        hiddenInput.value = value;
+                    }
+                });
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                closeCustomSelect();
+            });
+            
+            // Close dropdown on scroll or resize
+            window.addEventListener('scroll', closeCustomSelect);
+            window.addEventListener('resize', closeCustomSelect);
+            
+            function openCustomSelect() {
+                trigger.classList.add('active');
+                
+                // Move dropdown to body to avoid z-index issues
+                if (options.parentElement !== document.body) {
+                    document.body.appendChild(options);
+                }
+                
+                // Calculate position for fixed positioning
+                const triggerRect = trigger.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const dropdownHeight = 200; // max-height from CSS
+                
+                // Check if there's enough space below
+                const spaceBelow = viewportHeight - triggerRect.bottom;
+                const showAbove = spaceBelow < dropdownHeight && triggerRect.top > dropdownHeight;
+                
+                if (showAbove) {
+                    options.style.top = (triggerRect.top - dropdownHeight) + 'px';
+                    options.style.borderRadius = '10px 10px 0 0';
+                } else {
+                    options.style.top = triggerRect.bottom + 'px';
+                    options.style.borderRadius = '0 0 10px 10px';
+                }
+                
+                options.style.left = triggerRect.left + 'px';
+                options.style.width = triggerRect.width + 'px';
+                
+                options.classList.add('show');
+            }
+            
+            function closeCustomSelect() {
+                trigger.classList.remove('active');
+                options.classList.remove('show');
+                
+                // Reset inline styles
+                options.style.top = '';
+                options.style.left = '';
+                options.style.width = '';
+            }
+        }
+        
+        // Get current assistant ID for API calls
+        function getCurrentAssistantId() {
+            const trigger = document.querySelector('.custom-select-trigger');
+            return trigger ? trigger.getAttribute('data-value') : '6bc4a917-fd2e-5800-a61c-30ecb009f8f4';
+        }
+
+        // Initialize chatbot when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Auto-generate a new thread on page load
+            await autoGenerateThreadId();
+            new ChatBot();
+            
+            // Initialize custom select
+            initializeCustomSelect();
+            
+            // Add ESC key listener for modal
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeGraphModal();
+                }
+            });
+        });
+
+        // Auto-generate thread ID without button interaction
+        async function autoGenerateThreadId() {
+            const threadIdInput = document.getElementById('threadId');
+            
+            try {
+                threadIdInput.value = 'Creating new thread...';
+                
+                const baseUrl = document.getElementById('baseUrl').value;
+                const url = `${baseUrl}/threads`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'Origin': 'https://smith.langchain.com',
+                        'Pragma': 'no-cache',
+                        'Referer': 'https://smith.langchain.com/',
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'cross-site',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+                        'X-Tenant-Id': '',
+                        'content-type': 'application/json',
+                        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'x-auth-scheme': 'langsmith'
+                    },
+                    body: JSON.stringify({ metadata: {} })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.thread_id) {
+                    threadIdInput.value = data.thread_id;
+                    threadIdInput.readOnly = false; // Allow manual editing after creation
+                } else {
+                    throw new Error('No thread_id in response');
+                }
+
+            } catch (error) {
+                console.error('Error auto-creating thread:', error);
+                
+                // Fallback to client-side generation
+                const fallbackThreadId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+                threadIdInput.value = fallbackThreadId;
+                threadIdInput.readOnly = false;
+            }
+        }
+    </script>
+</body>
+</html>
+
