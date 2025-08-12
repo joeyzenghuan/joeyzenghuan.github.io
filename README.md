@@ -2,6 +2,7 @@
 # Document Update Bot 
 Crawling MS document update, summarizing using LLM then pushing summaries to Teams channel and website (Next.js), which keeps engineers informed about the latest updates without having to review documents manually.
 https://docs.westiedoubao.com 
+repo: https://github.com/joeyzenghuan/Eyes-On-Docs
 <img width="2255" height="1203" alt="image" src="https://github.com/user-attachments/assets/dc67a3f7-fb19-4fcf-b14a-f8e34d680563" />
 
 <img width="1429" height="1415" alt="image" src="https://github.com/user-attachments/assets/2aa3ecda-4e0f-42d1-a117-c4a6332d050f" />
